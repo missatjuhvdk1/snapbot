@@ -4,6 +4,7 @@
   "private": true,
   "description": "Snapchat video posting automation platform",
   "scripts": {
+    "setup": "node -e \"require('child_process').execSync(process.platform === 'win32' ? 'powershell -ExecutionPolicy Bypass -File ./setup.ps1' : 'bash setup.sh', {stdio: 'inherit'})\"",
     "dev:api": "pnpm --filter @snapchat-automation/api dev",
     "dev:worker": "pnpm --filter @snapchat-automation/worker dev",
     "dev:web": "pnpm --filter @snapchat-automation/web dev",

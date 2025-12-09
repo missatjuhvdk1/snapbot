@@ -19,7 +19,37 @@ Automate video posting to multiple Snapchat accounts with proxy support, captcha
 
 ## 🛠️ Setup Instructions
 
-### 1. Clone and Install Dependencies
+### 🚀 Automated Setup (Recommended)
+
+**One command to get started:**
+
+```bash
+npm run setup
+```
+
+This automatically:
+- ✅ Installs pnpm if needed
+- ✅ Verifies Docker installation
+- ✅ Creates .env file from template
+- ✅ Starts PostgreSQL and Redis containers
+- ✅ Installs all dependencies
+- ✅ Generates Prisma client
+- ✅ Runs database migrations
+
+After setup completes:
+```bash
+pnpm dev        # Run all services
+# OR
+pnpm dev:api    # API server on http://localhost:3000
+pnpm dev:worker # Background worker
+```
+
+### ⚙️ Manual Setup (Alternative)
+
+<details>
+<summary>Click to expand manual setup steps</summary>
+
+#### 1. Install Dependencies
 
 ```bash
 # Install pnpm if you haven't already
@@ -34,7 +64,7 @@ pnpm exec playwright install chromium
 cd ../..
 ```
 
-### 2. Start Database Services
+#### 2. Start Database Services
 
 ```bash
 # Start PostgreSQL and Redis via Docker Compose
@@ -44,7 +74,7 @@ pnpm docker:up
 docker ps
 ```
 
-### 3. Configure Environment
+#### 3. Configure Environment
 
 ```bash
 # Copy environment template
@@ -56,7 +86,7 @@ cp .env.example .env
 # - Other settings as needed
 ```
 
-### 4. Setup Database
+#### 4. Setup Database
 
 ```bash
 # Run Prisma migrations
@@ -66,7 +96,7 @@ pnpm db:migrate
 pnpm db:studio
 ```
 
-### 5. Start the Applications
+#### 5. Start the Applications
 
 ```bash
 # Start API server (Terminal 1)
@@ -77,6 +107,8 @@ pnpm dev:worker
 
 # The API will be available at http://localhost:3000
 ```
+
+</details>
 
 ## 📁 Project Structure
 
