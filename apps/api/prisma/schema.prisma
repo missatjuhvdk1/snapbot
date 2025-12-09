@@ -1,0 +1,262 @@
+// Prisma schema for Snapchat Automation Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============= Authentication & Users =============
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password      String      // bcrypt hashed
+  name          String?
+  role          UserRole    @default(USER)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  videos        Video[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ============= Snapchat Accounts =============
+
+model Account {
+  id              String        @id @default(uuid())
+  userId          String
+  username        String        @unique
+  password        String        // Encrypted with AES-256
+  email           String?
+  phoneNumber     String?
+  status          AccountStatus @default(PENDING)
+  proxyId         String?
+
+  // Session data
+  cookies         Json?         // Stored browser cookies
+  userDataDir     String?       // Path to persistent browser context
+  lastLoginAt     DateTime?
+
+  // Metadata
+  accountAge      DateTime?     // Account creation date on Snapchat
+  followerCount   Int           @default(0)
+  isWarmedUp      Boolean       @default(false)
+
+  // Rate limiting
+  postsToday      Int           @default(0)
+  lastPostAt      DateTime?
+  dailyPostLimit  Int           @default(3)
+
+  // Health tracking
+  failedAttempts  Int           @default(0)
+  lastFailedAt    DateTime?
+  isBanned        Boolean       @default(false)
+  bannedAt        DateTime?
+  bannedReason    String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proxy           Proxy?        @relation(fields: [proxyId], references: [id])
+  jobs            Job[]
+  postHistory     PostHistory[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("accounts")
+}
+
+enum AccountStatus {
+  PENDING      // Not verified yet
+  ACTIVE       // Ready to use
+  WARMING_UP   // In warmup process
+  SUSPENDED    // Temporarily disabled
+  BANNED       // Permanently banned
+  ERROR        // Configuration error
+}
+
+// ============= Proxies =============
+
+model Proxy {
+  id          String       @id @default(uuid())
+  host        String
+  port        Int
+  username    String?
+  password    String?      // Encrypted
+  protocol    ProxyType    @default(HTTP)
+  country     String?
+
+  // Health
+  isActive    Boolean      @default(true)
+  lastChecked DateTime?
+  failCount   Int          @default(0)
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  accounts    Account[]
+
+  @@unique([host, port])
+  @@index([isActive])
+  @@map("proxies")
+}
+
+enum ProxyType {
+  HTTP
+  HTTPS
+  SOCKS5
+}
+
+// ============= Videos =============
+
+model Video {
+  id              String        @id @default(uuid())
+  userId          String
+  filename        String
+  originalName    String
+  mimeType        String
+  fileSize        Int           // Bytes
+  duration        Float?        // Seconds
+
+  // Storage (local filesystem)
+  localPath       String        // Path to video file
+  thumbnailUrl    String?
+
+  // Metadata
+  title           String?
+  description     String?
+  tags            String[]      @default([])
+
+  // Status
+  status          VideoStatus   @default(UPLOADED)
+  uploadedAt      DateTime      @default(now())
+  processedAt     DateTime?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs            Job[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("videos")
+}
+
+enum VideoStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+  DELETED
+}
+
+// ============= Jobs =============
+
+model Job {
+  id              String      @id @default(uuid())
+  accountId       String
+  videoId         String
+
+  // Job config
+  priority        Int         @default(0)
+  scheduledFor    DateTime?
+  attemptCount    Int         @default(0)
+  maxAttempts     Int         @default(3)
+
+  // Status tracking
+  status          JobStatus   @default(PENDING)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  failedAt        DateTime?
+
+  // Results
+  error           String?
+  errorStack      String?
+  captchaSolved   Boolean     @default(false)
+  captchaAttempts Int         @default(0)
+
+  // Logs (for debugging)
+  logs            Json[]      @default([])
+  screenshots     String[]    @default([])
+
+  // BullMQ reference
+  bullJobId       String?     @unique
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  account         Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  video           Video       @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([accountId])
+  @@map("jobs")
+}
+
+enum JobStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  RETRY
+}
+
+// ============= Post History (Audit) =============
+
+model PostHistory {
+  id          String   @id @default(uuid())
+  accountId   String
+  videoTitle  String?
+  postedAt    DateTime @default(now())
+  success     Boolean
+  error       String?
+  duration    Int?     // Milliseconds
+
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([postedAt])
+  @@map("post_history")
+}
+
+// ============= System Configuration =============
+
+model SystemConfig {
+  id              String   @id @default(uuid())
+  key             String   @unique
+  value           Json
+  description     String?
+  updatedAt       DateTime @updatedAt
+
+  @@map("system_config")
+}

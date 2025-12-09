@@ -1,0 +1,32 @@
+{
+  "name": "snapchat-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Snapchat video posting automation platform",
+  "scripts": {
+    "dev:api": "pnpm --filter @snapchat-automation/api dev",
+    "dev:worker": "pnpm --filter @snapchat-automation/worker dev",
+    "dev:web": "pnpm --filter @snapchat-automation/web dev",
+    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:worker\" \"pnpm dev:web\"",
+    "build": "turbo run build",
+    "db:migrate": "pnpm --filter @snapchat-automation/api db:migrate",
+    "db:studio": "pnpm --filter @snapchat-automation/api db:studio",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "turbo": "^1.11.2",
+    "typescript": "^5.3.3"
+  }
+}

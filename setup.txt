@@ -1,0 +1,66 @@
+Quick Fix Commands:
+1. Install pnpm using Corepack (easiest method):
+
+bash
+Copy
+corepack enable
+corepack prepare pnpm@latest --activate
+2. Start Docker Desktop:
+
+Open Docker Desktop on your Windows machine (not WSL)
+Wait for it to fully start
+The Docker icon in your Windows system tray should show it's running
+3. Once Docker is running, verify:
+
+bash
+Copy
+docker ps
+4. Then run the setup:
+
+bash
+Copy
+cd /mnt/c/Users/u005357/Documents/agent-smith/chat-d8c3981b
+
+# Install dependencies
+pnpm install
+
+# Start Docker services
+docker-compose up -d
+
+# Wait for database
+sleep 5
+
+# Run migrations
+cd apps/api
+pnpm db:migrate
+cd ../..
+
+# Install Playwright
+cd apps/worker
+pnpm exec playwright install chromium
+cd ../..
+
+# Create directories
+mkdir -p uploads screenshots
+5. Start the applications:
+
+In Terminal 1:
+
+bash
+Copy
+cd /mnt/c/Users/u005357/Documents/agent-smith/chat-d8c3981b
+pnpm dev:api
+In Terminal 2:
+
+bash
+Copy
+cd /mnt/c/Users/u005357/Documents/agent-smith/chat-d8c3981b
+pnpm dev:worker
+Alternative if Corepack doesn't work:
+
+bash
+Copy
+# Install pnpm to local directory (no sudo needed)
+npm install -g pnpm --prefix ~/.local
+export PATH="$HOME/.local/bin:$PATH"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
