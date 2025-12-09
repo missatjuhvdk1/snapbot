@@ -10,7 +10,8 @@ $ErrorActionPreference = "Stop"
 try {
     $pnpmVersion = pnpm --version 2>$null
     Write-Host "✅ pnpm is already installed (v$pnpmVersion)" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "📦 pnpm not found. Installing pnpm..." -ForegroundColor Yellow
     npm install -g pnpm
     Write-Host "✅ pnpm installed successfully" -ForegroundColor Green
@@ -20,7 +21,8 @@ try {
 try {
     $dockerVersion = docker --version
     Write-Host "✅ Docker is installed" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "❌ Docker not found. Please install Docker Desktop:" -ForegroundColor Red
     Write-Host "   👉 https://www.docker.com/products/docker-desktop" -ForegroundColor Yellow
     Write-Host ""
@@ -31,7 +33,8 @@ try {
 # Check if Docker daemon is running
 try {
     docker info 2>$null | Out-Null
-} catch {
+}
+catch {
     Write-Host "❌ Docker daemon is not running. Please start Docker Desktop." -ForegroundColor Red
     exit 1
 }
@@ -43,7 +46,8 @@ if (-not (Test-Path .env)) {
     Copy-Item .env.example .env
     Write-Host "✅ Created root .env file" -ForegroundColor Green
     Write-Host "⚠️  Remember to update .env with your settings!" -ForegroundColor Yellow
-} else {
+}
+else {
     Write-Host "⚠️  Root .env already exists, skipping..." -ForegroundColor Yellow
 }
 
@@ -51,7 +55,8 @@ if (-not (Test-Path .env)) {
 if (-not (Test-Path apps/api/.env)) {
     Copy-Item .env.example apps/api/.env
     Write-Host "✅ Created apps/api/.env file" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "⚠️  apps/api/.env already exists, skipping..." -ForegroundColor Yellow
 }
 
